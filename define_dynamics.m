@@ -31,7 +31,7 @@ theta_1_ddot = ( ...
              - m_2*L_1*l_2*(cos(theta_2))                            * tau_2 ...
              + (1/2)*m_2^2*l_2^2*L_1*sin(2*theta_2)                  * g ...
              )  ...
-             / ( J_0_hat*J_2_hat *J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
+             / ( J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
 
 
 theta_2_ddot = ( ...
@@ -41,7 +41,7 @@ theta_2_ddot = ( ...
              - (1/2)*sin(2*theta_2)*(J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2) * theta_1_dot^2 ...
              - (1/2)*m_2^2*L_1^2*l_2^2*sin(2*theta_2)                            * theta_2_dot^2 ...
              - m_2*L_1*l_2*cos(theta_2)                                          * tau_1 ...
-             + J_0_hat + J_2_hat*sin(theta_2)^2                                  * tau_2 ...
+             + ( J_0_hat + J_2_hat*sin(theta_2)^2 )                                 * tau_2 ...
              - m_2*l_2*sin(theta_2)*(J_0_hat + J_2_hat*sin(theta_2)^2)           * g ...
              )  ...
              / ( J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
@@ -76,6 +76,8 @@ theta_1_ddot_auto = subs( ...
 theta_2_ddot_auto = subs( ...
     theta_2_ddot, subs_array(:,1), subs_array(:,2));
 
+
+
 % verify behavior of planar system (i.e., let theta_2 = theta_2_dot = 0)
 
 % x1 := theta_2, x2 := theta_2_dot
@@ -89,6 +91,36 @@ X2DOT = t2dd( X1, X2 );
 
 figure
 quiver( X1, X2, X1DOT, X2DOT, 1 )
+
+subs_array = [ ...
+              % theta_1      0
+              % theta_1_dot  0
+              % theta_2      0
+              % theta_2_dot  0
+              J_0_hat      0.1
+              J_1_hat      0.1
+              J_2_hat      0.2
+              m_1          0.1
+              m_2          0.1
+              L_1          0.1
+              L_2          0.1
+              l_1          0.5
+              l_2          0.5
+              b_1          0.1
+              b_2          0.1
+              % tau_1        0
+              tau_2        0
+              g            9.81 ...
+             ];
+
+
+theta_1_ddot_slk = subs( ...
+    theta_1_ddot, subs_array(:,1), subs_array(:,2));
+theta_2_ddot_slk = subs( ...
+    theta_2_ddot, subs_array(:,1), subs_array(:,2));
+
+theta_1_ddot_slk = matlabFunction( theta_1_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1]);
+theta_2_ddot_slk = matlabFunction( theta_2_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1]);
 
 % save workspace for use in live script
 save dynamics.mat
