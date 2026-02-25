@@ -7,6 +7,10 @@ clear
 clc
 close all
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEFINE PENDULUM DYNAMICS 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Describe nonlinear simplified dynamics symbolically
 % NOTE difference from [1]: setting "disturbance torque" tau_2 = 0
 syms theta_1 theta_1_dot ... rotor arm angle
@@ -41,56 +45,11 @@ theta_2_ddot = ( ...
              - (1/2)*sin(2*theta_2)*(J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2) * theta_1_dot^2 ...
              - (1/2)*m_2^2*L_1^2*l_2^2*sin(2*theta_2)                            * theta_2_dot^2 ...
              - m_2*L_1*l_2*cos(theta_2)                                          * tau_1 ...
-             + ( J_0_hat + J_2_hat*sin(theta_2)^2 )                                 * tau_2 ...
+             + ( J_0_hat + J_2_hat*sin(theta_2)^2 )                              * tau_2 ...
              - m_2*l_2*sin(theta_2)*(J_0_hat + J_2_hat*sin(theta_2)^2)           * g ...
              )  ...
              / ( J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
 
-% substitute in some values 
-% looking at autonomous system dynamics, so set both torques equal to zero
-% NOTE NEED TO GO THROUGH AND FIGURE OUT WHICH "BASE VARIABLES" WE CAN USE TO SOLVE FOR OTHER VARIABLES (I.E., J0HAT) 
-subs_array = [ ...
-              theta_1      0
-              theta_1_dot  0
-              % theta_2      0
-              % theta_2_dot  0
-              J_0_hat      0.1
-              J_1_hat      0.1
-              J_2_hat      0.2
-              m_1          0.1
-              m_2          0.1
-              L_1          0.1
-              L_2          0.1
-              l_1          0.5
-              l_2          0.5
-              b_1          0.1
-              b_2          0.1
-              tau_1        0
-              tau_2        0
-              g            9.81 ...
-             ];
-
-
-theta_1_ddot_auto = subs( ...
-    theta_1_ddot, subs_array(:,1), subs_array(:,2));
-theta_2_ddot_auto = subs( ...
-    theta_2_ddot, subs_array(:,1), subs_array(:,2));
-
-
-
-% verify behavior of planar system (i.e., let theta_2 = theta_2_dot = 0)
-
-% x1 := theta_2, x2 := theta_2_dot
-t2dd = matlabFunction( theta_2_ddot_auto, 'Vars', [theta_2 theta_2_dot]);
-
-% [X1, X2] = meshgrid( -3*pi/4 : 0.3 : 3*pi/4 );
-[X1, X2] = meshgrid( -2*pi : 0.3 : 2*pi );
-
-X1DOT = X2;
-X2DOT = t2dd( X1, X2 );
-
-figure
-quiver( X1, X2, X1DOT, X2DOT, 1 )
 
 subs_array = [ ...
               % theta_1      0
@@ -115,12 +74,53 @@ subs_array = [ ...
 
 
 theta_1_ddot_slk = subs( ...
-    theta_1_ddot, subs_array(:,1), subs_array(:,2));
+    theta_1_ddot, subs_array(:,1), subs_array(:,2) );
 theta_2_ddot_slk = subs( ...
-    theta_2_ddot, subs_array(:,1), subs_array(:,2));
+    theta_2_ddot, subs_array(:,1), subs_array(:,2) );
 
-theta_1_ddot_slk = matlabFunction( theta_1_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1]);
-theta_2_ddot_slk = matlabFunction( theta_2_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1]);
+theta_1_ddot_slk = matlabFunction( theta_1_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1 ] );
+theta_2_ddot_slk = matlabFunction( theta_2_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1 ] );
 
-% save workspace for use in live script
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEFINE MOTOR DYNAMICS 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% describe motor electrical dynamics symbolically
+% NOTE: rotor dynamics are already considered using the above dynamics,
+%       resulting in torque to be a "state" while voltage is the "new input"
+% NOTE: these dynamics require voltage to be the input variable. However,
+%       if we are able to characterize what exactly the motor driver is
+%       doing, then we can use a PWM voltage signal and then simulate its
+%       effect 
+syms J_0_hat ... MOI experienced by motor rotor (TODO review assumptions in paper... is this accurate)
+     K_m ... torque/back emf coefficient
+     L_m ... inductance
+     R_m ... resistance
+     V ... voltage (input)
+     i ... current 
+     theta_1 theta_1_dot ... rotor angle (same as above!)
+
+% current state equation
+i_dot = 1 / L_m * ( V - R_m*i - K_m*theta_1_dot );
+% torque output equation
+tau = K_m*i;
+
+subs_array = [ ...
+              % theta_1      0
+              % theta_1_dot  0
+              % i            0
+              % V            0
+              J_0_hat        0.1
+              K_m            0.090 % [Nm/A]
+              L_m            0.005 % [H]
+              R_m            7.800 % [Ohm]
+             ];
+
+i_dot_slk = subs( ...
+    i_dot, subs_array(:,1), subs_array(:,2) );
+i_dot_slk = matlabFunction( i_dot_slk, 'Vars', [ theta_1_dot, i, V] );
+
+tau_slk = subs( tau, K_m, 0.090 );
+tau_slk = matlabFunction( tau_slk, 'Vars', i );
+
+% save dynamics in mat file
 save dynamics.mat
