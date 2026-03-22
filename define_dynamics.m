@@ -122,5 +122,101 @@ i_dot_slk = matlabFunction( i_dot_slk, 'Vars', [ theta_1_dot, i, V] );
 tau_slk = subs( tau, K_m, 0.090 );
 tau_slk = matlabFunction( tau_slk, 'Vars', i );
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LINEARIZE DYNAMICS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% define matrix terms
+A31 = 0;
+A32 = g*m_2^2*l_2^2*L_1 / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+A33 = -b_1*J_2_hat      / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+A34 = -b_2*m_2*l_2*L_1  / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+A41 = 0;
+A42 = g*m_2*l_2*J_0_hat / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+A43 = -b_1*m_2*l_2*L_1  / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+A44 = -b_2*J_0_hat      / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+
+B31 = J_2_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+B41 = m_2*L_1*l_2 / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+B32 = m_2*L_1*l_2 / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+B42 = J_0_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
+
+% write inverted linearization
+% ignoring dynamics for "disturbance torque"
+
+A_i = [ 0   0   1        0    0       ;
+        0   0   0        1    0       ;
+        A31 A32 A33      A34  B31*K_m ; 
+        A41 A42 A43      A44  B41*K_m ;
+        0   0   -K_m/L_m 0   -R_m/L_m ];
+
+B_i = [ 0     ; 
+        0     ;
+        0     ;
+        0     ;
+        1/L_m ];
+
+% write suspended linearization
+A_s = [ 0    0    1        0     0       ;
+        0    0    0        1     0       ;
+        A31  A32  A33     -A34   B31*K_m ; 
+        A41 -A42 -A43      A44  -B41*K_m ;
+        0   0    -K_m/L_m  0    -R_m/L_m ];
+
+B_s = [ 0     ; 
+        0     ;
+        0     ;
+        0     ;
+        1/L_m ];
+
+J1 = 2.48e-2;
+J2 = 3.86e-3;
+m1 = 0.3;
+m2 = 0.075;
+l1 = 0.150;
+l2 = 0.148;
+L1 = 0.278;
+
+J1hatv = J1 + m1*l1^2;
+J2hatv = J2 + m2*l2^2;
+J0hatv = J1hatv + m2*L1^2; 
+
+
+subs_array = [ ...
+              % theta_1      0
+              % theta_1_dot  0
+              % theta_2      0
+              % theta_2_dot  0
+              J_0_hat      J0hatv
+              J_1_hat      J1hatv
+              J_2_hat      J2hatv
+              m_1          m1
+              m_2          m2
+              L_1          L1
+              L_2          0.300
+              l_1          l1
+              l_2          l2
+              b_1          1e-4
+              b_2          2.80e-4
+              % tau_1        0
+              tau_2        0       % neglect disturbance torque
+              g            9.81 
+              % i            0
+              % V            0
+              J_0_hat        0.1
+              K_m            0.090 % [Nm/A]
+              L_m            0.005 % [H]
+              R_m            7.800 % [Ohm]
+             ];
+
+A_i = double( subs( A_i, subs_array(:,1), subs_array(:,2) ) );
+B_i = double( subs( B_i, subs_array(:,1), subs_array(:,2) ) );
+A_s = double( subs( A_s, subs_array(:,1), subs_array(:,2) ) );
+B_s = double( subs( B_s, subs_array(:,1), subs_array(:,2) ) );
+ 
+% C and D matrices are the same for both configurations
+C = eye( 5, 5 ); % state feedback for now
+D = zeros( 5, 1 );
+
 % save dynamics in mat file
 save dynamics.mat
