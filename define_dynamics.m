@@ -51,25 +51,38 @@ theta_2_ddot = ( ...
              / ( J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
 
 
+J1 = 2.48e-2;
+J2 = 3.86e-3;
+m1 = 0.3;
+m2 = 0.075;
+l1 = 0.150;
+l2 = 0.148;
+L1 = 0.278;
+
+J1hatv = J1 + m1*l1^2;
+J2hatv = J2 + m2*l2^2;
+J0hatv = J1hatv + m2*L1^2; 
+
+
 subs_array = [ ...
               % theta_1      0
               % theta_1_dot  0
               % theta_2      0
               % theta_2_dot  0
-              J_0_hat      0.1
-              J_1_hat      0.1
-              J_2_hat      0.2
-              m_1          0.1
-              m_2          0.1
-              L_1          0.1
-              L_2          0.1
-              l_1          0.5
-              l_2          0.5
-              b_1          0.1
-              b_2          0.1
+              J_0_hat      J0hatv
+              J_1_hat      J1hatv
+              J_2_hat      J2hatv
+              m_1          m1
+              m_2          m2
+              L_1          L1
+              L_2          0.300
+              l_1          l1
+              l_2          l2
+              b_1          1e-4
+              b_2          2.80e-4
               % tau_1        0
-              tau_2        0
-              g            9.81 ...
+              tau_2        0       % neglect disturbance torque
+              g            9.81 
              ];
 
 
@@ -109,7 +122,7 @@ subs_array = [ ...
               % theta_1_dot  0
               % i            0
               % V            0
-              J_0_hat        0.1
+              J_0_hat        J0hatv            
               K_m            0.090 % [Nm/A]
               L_m            0.005 % [H]
               R_m            7.800 % [Ohm]
@@ -203,7 +216,6 @@ subs_array = [ ...
               g            9.81 
               % i            0
               % V            0
-              J_0_hat        0.1
               K_m            0.090 % [Nm/A]
               L_m            0.005 % [H]
               R_m            7.800 % [Ohm]
