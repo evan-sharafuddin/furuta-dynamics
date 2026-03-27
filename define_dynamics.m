@@ -182,6 +182,7 @@ B_s = [ 0     ;
         0     ;
         1/L_m ];
 
+% substitute values
 J1 = 2.48e-2;
 J2 = 3.86e-3;
 m1 = 0.3;

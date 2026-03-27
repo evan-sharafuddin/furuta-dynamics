@@ -54,7 +54,7 @@ K_s_nl(3) = K_s(2);
 C_s = [ 1 0 0 0 0 ; 
         0 1 0 0 0 ;
         0 0 0 0 1 ];
-D_s = zeros( 3, 1 );
+D_s = zeros( 3, 5 );
 
 lambda = eig( A_s );
 fprintf("Eigenvalues of A:\n")
@@ -91,3 +91,34 @@ L_s = place( A_s', C_s', p )';
 % L_s_nl    = L_s;
 % L_s_nl(2) = L_s(3);
 % L_s_nl(3) = L_s(2);
+
+%% Pole placement for inverted pendulum
+% note that the system matrices for the suspended and inverted pendulum
+% linearizations have the same controllability and observability properties
+load dynamics.mat
+
+lambda = eig( A_i );
+fprintf("Eigenvalues of A:\n")
+disp(lambda)
+
+p = [ -2 -2.5 -3 -4-1j*4 -4+1j*4 ];
+K_i = place( A_i, B_i, p );
+
+K_i_nl    = K_i;
+K_i_nl(2) = K_i(3);
+K_i_nl(3) = K_i(2);
+
+
+% create observer
+C_i = [ 1 0 0 0 0 ; 
+        0 1 0 0 0 ;
+        0 0 0 0 1 ];
+D_i = zeros( 3, 5 );
+
+p = [ -14 -15 -16 -17 -18 ];
+% p = [ -100 -200 -300 -40 -500 ];
+L_i = place( A_i', C_i', p )';
+
+% create overall state space representation
+Abig = [ A_i-B_i*K_i          , B_i*K_i     ;
+         zeros( size( A_i ) ) , A_i-L_i*C_i ];
