@@ -4,11 +4,73 @@
 %   [2] https://journals.sagepub.com/doi/epdf/10.1243/PIME_PROC_1992_206_341_02
 
 clear
-clc
+% clc
 close all
+format compact
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DEFINE PENDULUM DYNAMICS 
+% DEFINE PHYSICAL PARAMETERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+F_USEREAL = true; 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Values from [1]
+if ~F_USEREAL
+J1 = 2.48e-2
+J2 = 3.86e-3
+m1 = 0.3
+m2 = 0.075
+l1 = 0.150
+l2 = 0.148
+L1 = 0.278
+L2 = 0.3
+J1hatv = J1 + m1*l1^2
+J2hatv = J2 + m2*l2^2
+J0hatv = J1hatv + m2*L1^2 
+b1 = 1e-4
+b2 = 2.80e-4
+Km = 0.090 % [Nm/A]
+Ke = Km
+Lm = 0.005 % [H]
+Rm = 7.800 % [Ohm]
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Values from Donavon :)
+if F_USEREAL
+m1 = 35.27e-3 
+m2 = 44.73e-3
+L1 = 192.16e-3 
+L2 = 243.66e-3 
+% assume mass is distributed evenly along arms, so COM is in middle
+l1 = L1 / 2
+l2 = L2 / 2
+% calculate moment of inertia of rod about COM
+J1 = 1/12 * m1 * L1^2
+J2 = 1/12 * m2 * L2^2
+% these inertias are as defined in the paper [1]
+J1hatv = J1 + m1*l1^2
+J2hatv = J2 + m2*l2^2
+J0hatv = J1hatv + m2*L1^2 
+% dampening is just taken from the paper for now [1]
+b1 = 1e-4
+b2 = 2.80e-4
+% next, the motor parameters
+Lm = 1.6e-3 
+Rm = 1.47
+% Donavon was getting different values for back EMF and torque constants,
+% so these are incorporated separately in the model... however, IDEALLY
+% they should be the same
+% Ke = 0.0918 * (60/2/pi)
+% Km = 0.25
+Km = 0.09; 
+Ke = Km;
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEFINE **NONLINEAR** PENDULUM DYNAMICS 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Describe nonlinear simplified dynamics symbolically
@@ -50,20 +112,7 @@ theta_2_ddot = ( ...
              )  ...
              / ( J_0_hat*J_2_hat + J_2_hat^2*sin(theta_2)^2 - m_2^2*L_1^2*l_2^2*cos(theta_2)^2 );
 
-
-J1 = 2.48e-2;
-J2 = 3.86e-3;
-m1 = 0.3;
-m2 = 0.075;
-l1 = 0.150;
-l2 = 0.148;
-L1 = 0.278;
-
-J1hatv = J1 + m1*l1^2;
-J2hatv = J2 + m2*l2^2;
-J0hatv = J1hatv + m2*L1^2; 
-
-
+% note: commented values below are states!
 subs_array = [ ...
               % theta_1      0
               % theta_1_dot  0
@@ -75,11 +124,11 @@ subs_array = [ ...
               m_1          m1
               m_2          m2
               L_1          L1
-              L_2          0.300
+              L_2          L2
               l_1          l1
               l_2          l2
-              b_1          1e-4
-              b_2          2.80e-4
+              b_1          b1
+              b_2          b2
               % tau_1        0
               tau_2        0       % neglect disturbance torque
               g            9.81 
@@ -105,7 +154,8 @@ theta_2_ddot_slk = matlabFunction( theta_2_ddot_slk, 'Vars', [ theta_1, theta_1_
 %       doing, then we can use a PWM voltage signal and then simulate its
 %       effect 
 syms J_0_hat ... MOI experienced by motor rotor (TODO review assumptions in paper... is this accurate)
-     K_m ... torque/back emf coefficient
+     K_m ... torque coefficient
+     K_e ... back emf coefficient
      L_m ... inductance
      R_m ... resistance
      V ... voltage (input)
@@ -113,7 +163,7 @@ syms J_0_hat ... MOI experienced by motor rotor (TODO review assumptions in pape
      theta_1 theta_1_dot ... rotor angle (same as above!)
 
 % current state equation
-i_dot = 1 / L_m * ( V - R_m*i - K_m*theta_1_dot );
+i_dot = 1 / L_m * ( V - R_m*i - K_e*theta_1_dot );
 % torque output equation
 tau = K_m*i;
 
@@ -123,21 +173,22 @@ subs_array = [ ...
               % i            0
               % V            0
               J_0_hat        J0hatv            
-              K_m            0.090 % [Nm/A]
-              L_m            0.005 % [H]
-              R_m            7.800 % [Ohm]
+              K_m            Km % [Nm/A]
+              K_e            Ke
+              L_m            Lm % [H]
+              R_m            Rm % [Ohm]
              ];
 
 i_dot_slk = subs( ...
     i_dot, subs_array(:,1), subs_array(:,2) );
 i_dot_slk = matlabFunction( i_dot_slk, 'Vars', [ theta_1_dot, i, V] );
 
-tau_slk = subs( tau, K_m, 0.090 );
+tau_slk = subs( tau, K_m, Km );
 tau_slk = matlabFunction( tau_slk, 'Vars', i );
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LINEARIZE DYNAMICS
+% DEFINE **LINEARIZED** DYNAMICS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % define matrix terms
 A31 = 0;
@@ -159,8 +210,8 @@ B42 = J_0_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
 
 A_i = [ 0   0   1        0    0       ;
         0   0   0        1    0       ;
-        A31 A32 A33      A34  B31*K_m ; 
-        A41 A42 A43      A44  B41*K_m ;
+        A31 A32 A33      A34  B31*K_e ; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
+        A41 A42 A43      A44  B41*K_e ; % ^^
         0   0   -K_m/L_m 0   -R_m/L_m ];
 
 B_i = [ 0     ; 
@@ -172,8 +223,8 @@ B_i = [ 0     ;
 % write suspended linearization
 A_s = [ 0    0    1        0     0       ;
         0    0    0        1     0       ;
-        A31  A32  A33     -A34   B31*K_m ; 
-        A41 -A42 -A43      A44  -B41*K_m ;
+        A31  A32  A33     -A34   B31*K_e ; % ^^
+        A41 -A42 -A43      A44  -B41*K_e ; % ^^
         0   0    -K_m/L_m  0    -R_m/L_m ];
 
 B_s = [ 0     ; 
@@ -182,20 +233,7 @@ B_s = [ 0     ;
         0     ;
         1/L_m ];
 
-% substitute values
-J1 = 2.48e-2;
-J2 = 3.86e-3;
-m1 = 0.3;
-m2 = 0.075;
-l1 = 0.150;
-l2 = 0.148;
-L1 = 0.278;
-
-J1hatv = J1 + m1*l1^2;
-J2hatv = J2 + m2*l2^2;
-J0hatv = J1hatv + m2*L1^2; 
-
-
+% note: commented values below are states and inputs!
 subs_array = [ ...
               % theta_1      0
               % theta_1_dot  0
@@ -207,19 +245,20 @@ subs_array = [ ...
               m_1          m1
               m_2          m2
               L_1          L1
-              L_2          0.300
+              L_2          L2
               l_1          l1
               l_2          l2
-              b_1          1e-4
-              b_2          2.80e-4
+              b_1          b1
+              b_2          b2
               % tau_1        0
               tau_2        0       % neglect disturbance torque
               g            9.81 
               % i            0
               % V            0
-              K_m            0.090 % [Nm/A]
-              L_m            0.005 % [H]
-              R_m            7.800 % [Ohm]
+              K_m            Km % [Nm/A]
+              K_e            Ke
+              L_m            Lm % [H]
+              R_m            Rm % [Ohm]
              ];
 
 A_i = double( subs( A_i, subs_array(:,1), subs_array(:,2) ) );
@@ -233,3 +272,6 @@ D = zeros( 5, 1 );
 
 % save dynamics in mat file
 save dynamics.mat
+
+fprintf("Running simulink companion file...\n")
+simulink_companion

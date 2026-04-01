@@ -7,9 +7,9 @@ clc
 
 load dynamics.mat
 
-odefun = @(t, x) simulate_dynamics_func(x, 0.1);
+odefun = @(t, x) simulate_dynamics_func(x, 0);
 
-[t, x] = ode45( odefun, [0 10], [0 0 pi/2 0 0 ] );
+[t, x] = ode45( odefun, [0 10], [0 0 pi/4 0 0 ] );
 
 figure
 subplot(5,1,1)
