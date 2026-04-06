@@ -4,7 +4,7 @@
 %   [2] https://journals.sagepub.com/doi/epdf/10.1243/PIME_PROC_1992_206_341_02
 
 clear
-% clc
+clc
 close all
 format compact
 
@@ -32,6 +32,7 @@ b1 = 1e-4
 b2 = 2.80e-4
 Km = 0.090 % [Nm/A]
 Ke = Km
+Ke = 1
 Lm = 0.005 % [H]
 Rm = 7.800 % [Ohm]
 end
@@ -54,8 +55,8 @@ J1hatv = J1 + m1*l1^2
 J2hatv = J2 + m2*l2^2
 J0hatv = J1hatv + m2*L1^2 
 % dampening is just taken from the paper for now [1]
-b1 = 1e-4
-b2 = 2.80e-4
+b1 = 1e-3
+b2 = 1e-3
 % next, the motor parameters
 Lm = 1.6e-3 
 Rm = 1.47
@@ -64,8 +65,8 @@ Rm = 1.47
 % they should be the same
 % Ke = 0.0918 * (60/2/pi)
 % Km = 0.25
-Km = 0.09; 
-Ke = Km;
+Km = 0.09 
+Ke = Km
 end
 
 
@@ -210,9 +211,9 @@ B42 = J_0_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
 
 A_i = [ 0   0   1        0    0       ;
         0   0   0        1    0       ;
-        A31 A32 A33      A34  B31*K_e ; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
-        A41 A42 A43      A44  B41*K_e ; % ^^
-        0   0   -K_m/L_m 0   -R_m/L_m ];
+        A31 A32 A33      A34  B31*K_m ; 
+        A41 A42 A43      A44  B41*K_m ; 
+        0   0   -K_e/L_m 0   -R_m/L_m ]; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
 
 B_i = [ 0     ; 
         0     ;
@@ -223,9 +224,9 @@ B_i = [ 0     ;
 % write suspended linearization
 A_s = [ 0    0    1        0     0       ;
         0    0    0        1     0       ;
-        A31  A32  A33     -A34   B31*K_e ; % ^^
-        A41 -A42 -A43      A44  -B41*K_e ; % ^^
-        0   0    -K_m/L_m  0    -R_m/L_m ];
+        A31  A32  A33     -A34   B31*K_m ;
+        A41 -A42 -A43      A44  -B41*K_m ; 
+        0   0    -K_e/L_m  0    -R_m/L_m ]; % ^^
 
 B_s = [ 0     ; 
         0     ;
