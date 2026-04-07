@@ -29,13 +29,13 @@ K_s_nl(3) = K_s(2);
 
 % Design of state observer
 % desired poles
-p = [ -14 -15 -16 -17 -18 ];
+% p = [ -14 -15 -16 -17 -18 ];
 % p = [ -10 -20 -50 -40 -60 ];
-% p = [ -100 -200 -300 -40 -500 ];
+p = [ -1800 -1810 -1812 -1813 -1814];
 
 C_s = [ 1 0 0 0 0 ; 
         0 1 0 0 0 ;
-        0 0 0 0 1 ];
+        0 0 1 0 0 ];
 D_s = zeros( 3, 5 );
 
 L_s = place( A_s', C_s', p )';
@@ -50,6 +50,11 @@ lambda = eig( Abig_s );
 fprintf("Eigenvalues of A suspended CL:\n")
 disp(lambda)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%
+% NOTE -- this is not updated, and there are issues with state ordering,
+% observer gains, etc 
+%%%%%%%%
 
 % note the state assignment order: x1, x2, x1d, x2d, i
 
@@ -89,8 +94,8 @@ lambda = eig( Abig_i );
 fprintf("Eigenvalues of A inverted CL:\n")
 disp(lambda)
 
-%% 
-sus = ss( Abig_s, Bbig_s, Cbig_s, Dbig_s );
-t = 0:0.01:10;
-
-y = lsim( sus, zeros(length(t), 1), t, [0 0.1 0 0 0 , 0 0 0 0 0] );
+% %% 
+% sus = ss( Abig_s, Bbig_s, Cbig_s, Dbig_s );
+% t = 0:0.01:10;
+% 
+% y = lsim( sus, zeros(length(t), 1), t, [0 0.1 0 0 0 , 0 0 0 0 0] );

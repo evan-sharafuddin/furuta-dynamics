@@ -141,7 +141,9 @@ theta_1_ddot_slk = subs( ...
 theta_2_ddot_slk = subs( ...
     theta_2_ddot, subs_array(:,1), subs_array(:,2) );
 
+% NOTE ORDERING: theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1
 theta_1_ddot_slk = matlabFunction( theta_1_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1 ] );
+% NOTE ORDERING: theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1
 theta_2_ddot_slk = matlabFunction( theta_2_ddot_slk, 'Vars', [ theta_1, theta_1_dot, theta_2, theta_2_dot, tau_1 ] );
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -209,30 +211,59 @@ B42 = J_0_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
 % write inverted linearization
 % ignoring dynamics for "disturbance torque"
 
-A_i = [ 0   0   1        0    0       ;
-        0   0   0        1    0       ;
-        A31 A32 A33      A34  B31*K_m ; 
-        A41 A42 A43      A44  B41*K_m ; 
-        0   0   -K_e/L_m 0   -R_m/L_m ]; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
+% NOTE NEW STATE ORDERING: theta_1 theta_2 i theta_1_dot theta_2_dot
+% Old state ordering is commented out
 
+% A_i = [ 0   0   1        0    0       ;
+%         0   0   0        1    0       ;
+%         A31 A32 A33      A34  B31*K_m ; 
+%         A41 A42 A43      A44  B41*K_m ; 
+%         0   0   -K_e/L_m 0   -R_m/L_m ]; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
+% 
+% B_i = [ 0     ; 
+%         0     ;
+%         0     ;
+%         0     ;
+%         1/L_m ];
+
+A_i = [ 0    0    0        1         0   ;
+        0    0    0        0         1   ;
+        0    0   -R_m/L_m -K_e/L_m   0   ;
+        A31  A32  B31*K_m  A33       A34 ;
+        A41  A42  B41*K_m  A43       A44 ];
 B_i = [ 0     ; 
-        0     ;
-        0     ;
-        0     ;
-        1/L_m ];
+        0     ; 
+        1/L_m ; 
+        0     ; 
+        0     ];
+
 
 % write suspended linearization
-A_s = [ 0    0    1        0     0       ;
-        0    0    0        1     0       ;
-        A31  A32  A33     -A34   B31*K_m ;
-        A41 -A42 -A43      A44  -B41*K_m ; 
-        0   0    -K_e/L_m  0    -R_m/L_m ]; % ^^
+% A_s = [ 0    0    1        0     0       ;
+%         0    0    0        1     0       ;
+%         A31  A32  A33     -A34   B31*K_m ;
+%         A41 -A42 -A43      A44  -B41*K_m ; 
+%         0   0    -K_e/L_m  0    -R_m/L_m ]; % ^^
 
+% B_s = [ 0     ; 
+%         0     ;
+%         0     ;
+%         0     ;
+%         1/L_m ];
+
+A_s = [ 0    0    0        1         0   ;
+        0    0    0        0         1   ;
+        0    0   -R_m/L_m -K_e/L_m   0   ;
+        A31  A32  B31*K_m  A33      -A34 ;
+        A41 -A42 -B41*K_m -A43       A44 ];
 B_s = [ 0     ; 
-        0     ;
-        0     ;
-        0     ;
-        1/L_m ];
+        0     ; 
+        1/L_m ; 
+        0     ; 
+        0     ];
+
+
+
 
 % note: commented values below are states and inputs!
 subs_array = [ ...
