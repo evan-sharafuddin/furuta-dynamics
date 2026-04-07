@@ -17,56 +17,56 @@ F_USEREAL = true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Values from [1]
 if ~F_USEREAL
-J1 = 2.48e-2
-J2 = 3.86e-3
-m1 = 0.3
-m2 = 0.075
-l1 = 0.150
-l2 = 0.148
-L1 = 0.278
-L2 = 0.3
-J1hatv = J1 + m1*l1^2
-J2hatv = J2 + m2*l2^2
-J0hatv = J1hatv + m2*L1^2 
-b1 = 1e-4
-b2 = 2.80e-4
-Km = 0.090 % [Nm/A]
-Ke = Km
-Ke = 1
-Lm = 0.005 % [H]
-Rm = 7.800 % [Ohm]
+J1 = 2.48e-2;
+J2 = 3.86e-3;
+m1 = 0.3;
+m2 = 0.075;
+l1 = 0.150;
+l2 = 0.148;
+L1 = 0.278;
+L2 = 0.3;
+J1hatv = J1 + m1*l1^2;
+J2hatv = J2 + m2*l2^2;
+J0hatv = J1hatv + m2*L1^2 ;
+b1 = 1e-4;
+b2 = 2.80e-4;
+Km = 0.090; % [Nm/A]
+Ke = Km;
+Ke = 1;
+Lm = 0.005; % [H]
+Rm = 7.800; % [Ohm]
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Values from Donavon :)
 if F_USEREAL
-m1 = 35.27e-3 
-m2 = 44.73e-3
-L1 = 192.16e-3 
-L2 = 243.66e-3 
+m1 = 35.27e-3 ;
+m2 = 44.73e-3;
+L1 = 192.16e-3 ;
+L2 = 243.66e-3 ;
 % assume mass is distributed evenly along arms, so COM is in middle
-l1 = L1 / 2
-l2 = L2 / 2
+l1 = L1 / 2;
+l2 = L2 / 2;
 % calculate moment of inertia of rod about COM
-J1 = 1/12 * m1 * L1^2
-J2 = 1/12 * m2 * L2^2
+J1 = 1/12 * m1 * L1^2;
+J2 = 1/12 * m2 * L2^2;
 % these inertias are as defined in the paper [1]
-J1hatv = J1 + m1*l1^2
-J2hatv = J2 + m2*l2^2
-J0hatv = J1hatv + m2*L1^2 
+J1hatv = J1 + m1*l1^2;
+J2hatv = J2 + m2*l2^2;
+J0hatv = J1hatv + m2*L1^2 ;
 % dampening is just taken from the paper for now [1]
-b1 = 1e-1
-b2 = 1e-3
+b1 = 1e-1;
+b2 = 1e-3;
 % next, the motor parameters
-Lm = 1.6e-3 
-Rm = 1.47
+Lm = 1.6e-3 ;
+Rm = 1.47;
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
 % Ke = 0.0918 * (60/2/pi)
 % Km = 0.25
-Km = 0.09 
-Ke = Km
+Km = 0.09 ;
+Ke = Km;
 end
 
 
@@ -306,4 +306,4 @@ D = zeros( 5, 1 );
 save dynamics.mat
 
 fprintf("Running simulink companion file...\n")
-simulink_companion
+create_suspended_ctrl
