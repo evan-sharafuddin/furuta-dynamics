@@ -55,7 +55,7 @@ J1hatv = J1 + m1*l1^2
 J2hatv = J2 + m2*l2^2
 J0hatv = J1hatv + m2*L1^2 
 % dampening is just taken from the paper for now [1]
-b1 = 1e-3
+b1 = 1e-1
 b2 = 1e-3
 % next, the motor parameters
 Lm = 1.6e-3 
