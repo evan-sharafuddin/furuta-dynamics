@@ -31,8 +31,8 @@ K_s_nl(3) = K_s(2);
 % Design of state observer
 % desired poles
 % p = [ -14 -15 -16 -17 -18 ];
-% p = [ -10 -20 -50 -40 -60 ];
-p = [-100 -110 -120 -130 -140];
+p = -55:-51;
+% p = [-100 -110 -120 -130 -140];
 % p = [ -1800 -1810 -1812 -1813 -1814];
 
 C_s = [ 1 0 0 0 0 ; 
@@ -53,7 +53,7 @@ fprintf("Eigenvalues of A suspended CL:\n")
 disp(lambda)
 
 % create discrete time matrices
-T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
+T = 1e-6; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
 
 Ae = A_s - L_s * C_s;
 Be = [ B_s L_s ];
@@ -80,6 +80,6 @@ Ce_fi = fi( Ce_d, F_SIGNED, num_word, num_frac, ...
 De_fi = fi( De_d, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
 
-Ae
-Ae_d
-Ae_fi
+% Ae
+% Ae_d
+% Ae_fi
