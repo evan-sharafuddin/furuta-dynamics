@@ -55,18 +55,19 @@ J1hatv = J1 + m1*l1^2;
 J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 ;
 % dampening is just taken from the paper for now [1]
-b1 = 1e-1;
+b1 = 1;
 b2 = 1e-3;
 % next, the motor parameters
-Lm = 1.6e-3 ;
+% Lm = 1.6e-3 ;
+Lm = 16e-3 * 1e-3; % scaled for mA
 Rm = 1.47;
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
 % Ke = 0.0918 * (60/2/pi)
 % Km = 0.25
-Km = 0.09 ;
-Ke = Km;
+Km = 0.25 * 1e-3; % scaled for mA 
+Ke = 0.0918;
 end
 
 
