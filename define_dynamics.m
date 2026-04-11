@@ -54,13 +54,15 @@ J2 = 1/12 * m2 * L2^2;
 J1hatv = J1 + m1*l1^2;
 J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 ;
-% dampening is just taken from the paper for now [1]
-b1 = 1;
-b2 = 1e-3;
+% dampening (b1 is a guess, but it should be quite high)
+b1 = 0.1;
+% b1 = 10;
+b2 = 0.0005;
 % next, the motor parameters
 % Lm = 1.6e-3 ;
-Lm = 16e-3 * 1e-3; % scaled for mA
-Rm = 1.47;
+% Lm = 16e-3 * 1e-3; % scaled for mA
+Lm = 16e-3 * 1e-2; % scaled for mA
+Rm = 1.47 * 1e-3; % scaled for mA
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
@@ -68,6 +70,7 @@ Rm = 1.47;
 % Km = 0.25
 Km = 0.25 * 1e-3; % scaled for mA 
 Ke = 0.0918;
+% Ke = 0;
 end
 
 
@@ -308,3 +311,45 @@ save dynamics.mat
 
 fprintf("Running simulink companion file...\n")
 create_suspended_ctrl
+
+
+%% run simulation
+
+sim = ss(Abig_s, Bbig_s, Cbig_s, Dbig_s);
+simol = ss( A_s, B_s, C_s, D_s );
+t = 0:0.01:10;
+u = 1 - 2*(mod(t,2) >= 1);
+% y = lsim( sim, zeros(size(t)), t, [0 0.1 0 0 0 0 0 0 0 0].' );
+y = lsim( simol, u, t, [0 0 0 0 0].' );
+% y = lsim( simol, zeros(size(t)), t, [0 0.1 0 0 0].' );
+
+figure, plot(t, y(:,1))
+figure, plot(t, y(:,2))
+figure, plot(t, y(:,3))
+
+
+%%
+close all
+t = 0:0.01:20;
+
+u_fun = @(tt) 1 - 2*(mod(tt,2) >= 1);
+% x0 = [0 0 0 0 0];
+% [t, y] = ode45(@(tt,y) simulate_dynamics_func(y, u_fun(tt)), [t(1) t(end)], x0);
+
+x0 = [0 0.1 0 0 0];
+[t, y] = ode45(@(tt,y) simulate_dynamics_func(y, 0), [t(1) t(end)], x0);
+
+
+init_response = readtable("PendulumImpulseResponse.csv");
+step_response = readtable("MotorRepeatedStepResponseDutyCycle50Percent.csv");
+t2 = step_response.Time_s_;
+y2 = step_response.Voltage_V_;
+
+t1 = init_response.Time_s_;
+y1 = init_response.Voltage_V_;
+
+figure, subplot(2,1,1), plot(t, y(:,1))
+subplot(2,1,2), plot(t2, movmean(y2, 1e3))
+figure; subplot(2,1,1),plot(t, y(:,2))
+subplot(2,1,2), plot( t1, y1)
+figure, plot(t, y(:,3))

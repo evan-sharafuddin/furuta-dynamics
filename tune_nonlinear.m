@@ -1,4 +1,4 @@
-clear; clc; close all;
+% clear; clc; close all;
 
 % Load data
 init_response = readtable("PendulumImpulseResponse.csv");

@@ -13,10 +13,11 @@ disp(lambda)
 
 % Pole placement for suspended pendulum 
 % desired poles
-p = [ -2 -2.5 -3 -4-1j*4 -4+1j*4 ];
+% p = [ -2 -2.5 -3 -4-1j*4 -4+1j*4 ];
 % p = [ -3, -3+1j*11, -3-1j*11, -20, -1];
-% p = [ -9 -8 -7 -8-1j*1 -8+1j*1 ];
-% p = [-20+1j*0.1, -20-1j*0.1, -21, -22+1j*0.1, -22-1j*0.1];
+p = [ -9 -8 -7 -8-1j*1 -8+1j*1 ];
+% p = 0.5*[-20+1j*0.1, -20-1j*0.1, -21, -22+1j*0.1, -22-1j*0.1];
+% p = [ -100, -100+j, -10, -5, -100-j ];
 % p = [ -2 -4 -5 -6 -7 ];
 % p = -35:-31;
 K_s = place( A_s, B_s, p )
@@ -33,16 +34,17 @@ K_s_nl(3) = K_s(2);
 % Design of state observer
 % desired poles
 % p = [ -14 -15 -16 -17 -18 ];
-p = -55:-51;
-% p = -355:-351;
-% p = [-100 -110 -120 -130 -140];
+% p = -55:-51;
+% p = -555:-551;
+p = -104:-100;
 % p = -204:-200;
+% p = [-204:-201, -500];
 % p = [ -1800 -1810 -1812 -1813 -1814];
 
 C_s = [ 1 0 0 0 0 ; 
         0 1 0 0 0 ;
         0 0 1 0 0 ];
-D_s = zeros( 3, 5 );
+D_s = 0;
 
 L_s = place( A_s', C_s', p )'
 
@@ -57,7 +59,7 @@ fprintf("Eigenvalues of A suspended CL:\n")
 disp(lambda)
 
 % create discrete time matrices
-T = 1e-4; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
+T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
 
 Ae = A_s - L_s * C_s;
 Be = [ B_s L_s ];
@@ -73,7 +75,7 @@ observer_sys_d = c2d( observer_sys, T, 'zoh' );
 F_SIGNED = 1;
 rounding_method = 'Floor';
 overflow_action = 'Saturate'; 
-num_frac = 16;
+num_frac = 24;
 num_word = 32;
 
 % create fixed point matrices
@@ -95,6 +97,10 @@ Ce_fi = fi( Ce_de, F_SIGNED, num_word, num_frac, ...
 De_fi = fi( De_de, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
 
+disp(Ae_d)
+disp(Be_d)
+disp(Ce_d)
+disp(De_d)
 
 disp("A")
 for i = 1:size(Ae_fi.hex,1)
