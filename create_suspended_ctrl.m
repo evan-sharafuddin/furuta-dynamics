@@ -15,8 +15,8 @@ disp(lambda)
 % desired poles
 % p = [ -2 -2.5 -3 -4-1j*4 -4+1j*4 ];
 % p = [ -3, -3+1j*11, -3-1j*11, -20, -1];
-p = [ -9 -8 -7 -8-1j*1 -8+1j*1 ];
-% p = 0.5*[-20+1j*0.1, -20-1j*0.1, -21, -22+1j*0.1, -22-1j*0.1];
+% p = [ -9 -8 -7 -8-1j*0.1 -8+1j*0.1 ];
+p = [-20+1j*0.1, -20-1j*0.1, -21, -22+1j*0.1, -22-1j*0.1];
 % p = [ -100, -100+j, -10, -5, -100-j ];
 % p = [ -2 -4 -5 -6 -7 ];
 % p = -35:-31;
@@ -36,9 +36,11 @@ K_s_nl(3) = K_s(2);
 % p = [ -14 -15 -16 -17 -18 ];
 % p = -55:-51;
 % p = -555:-551;
-p = -104:-100;
+p = -404:-400;
+% p = -104:-100;
 % p = -204:-200;
 % p = [-204:-201, -500];
+% p = -1504:-1500;
 % p = [ -1800 -1810 -1812 -1813 -1814];
 
 C_s = [ 1 0 0 0 0 ; 
@@ -54,9 +56,9 @@ Bbig_s = zeros( 10, 1 );
 Cbig_s = [ eye(5) zeros(5); zeros(5) zeros(5) ];
 Dbig_s = zeros( 10, 1 );
 
-lambda = eig( Abig_s );
-fprintf("Eigenvalues of A suspended CL:\n")
-disp(lambda)
+% lambda = eig( Abig_s );
+% fprintf("Eigenvalues of A suspended CL:\n")
+% disp(lambda)
 
 % create discrete time matrices
 T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
@@ -97,10 +99,10 @@ Ce_fi = fi( Ce_de, F_SIGNED, num_word, num_frac, ...
 De_fi = fi( De_de, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
 
-disp(Ae_d)
-disp(Be_d)
-disp(Ce_d)
-disp(De_d)
+% disp(Ae_d)
+% disp(Be_d)
+% disp(Ce_d)
+% disp(De_d)
 
 disp("A")
 for i = 1:size(Ae_fi.hex,1)

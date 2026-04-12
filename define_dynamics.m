@@ -1,4 +1,4 @@
-% Furuta Pendulum Dynamics -- ECEN 5458
+0% Furuta Pendulum Dynamics -- ECEN 5458
 % Refer to the following two papers for a full derivation
 %   [1] https://onlinelibrary.wiley.com/doi/epdf/10.1155/2011/528341
 %   [2] https://journals.sagepub.com/doi/epdf/10.1243/PIME_PROC_1992_206_341_02
@@ -15,63 +15,66 @@ format compact
 F_USEREAL = true; 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Values from [1]
-if ~F_USEREAL
-J1 = 2.48e-2;
-J2 = 3.86e-3;
-m1 = 0.3;
-m2 = 0.075;
-l1 = 0.150;
-l2 = 0.148;
-L1 = 0.278;
-L2 = 0.3;
-J1hatv = J1 + m1*l1^2;
-J2hatv = J2 + m2*l2^2;
-J0hatv = J1hatv + m2*L1^2 ;
-b1 = 1e-4;
-b2 = 2.80e-4;
-Km = 0.090; % [Nm/A]
-Ke = Km;
-Ke = 1;
-Lm = 0.005; % [H]
-Rm = 7.800; % [Ohm]
-end
+% %% Values from [1]
+% if ~F_USEREAL
+% J1 = 2.48e-2;
+% J2 = 3.86e-3;
+% m1 = 0.3;
+% m2 = 0.075;
+% l1 = 0.150;
+% l2 = 0.148;
+% L1 = 0.278;
+% L2 = 0.3;
+% J1hatv = J1 + m1*l1^2;
+% J2hatv = J2 + m2*l2^2;
+% J0hatv = J1hatv + m2*L1^2 ;
+% b1 = 1e-4;
+% b2 = 2.80e-4;
+% Km = 0.090; % [Nm/A]
+% Ke = Km;
+% Ke = 1;
+% Lm = 0.005; % [H]
+% Rm = 7.800; % [Ohm]
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Values from Donavon :)
-if F_USEREAL
+
 m1 = 35.27e-3 ;
 m2 = 44.73e-3;
 L1 = 192.16e-3 ;
 L2 = 243.66e-3 ;
+
 % assume mass is distributed evenly along arms, so COM is in middle
 l1 = L1 / 2;
 l2 = L2 / 2;
+
 % calculate moment of inertia of rod about COM
 J1 = 1/12 * m1 * L1^2;
 J2 = 1/12 * m2 * L2^2;
+
 % these inertias are as defined in the paper [1]
 J1hatv = J1 + m1*l1^2;
 J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 ;
+
 % dampening (b1 is a guess, but it should be quite high)
 b1 = 0.1;
 % b1 = 10;
 b2 = 0.0005;
+
 % next, the motor parameters
-% Lm = 1.6e-3 ;
+Lm = 1.6e-3 ;
 % Lm = 16e-3 * 1e-3; % scaled for mA
-Lm = 16e-3 * 1e-2; % scaled for mA
-Rm = 1.47 * 1e-3; % scaled for mA
+Rm = 1.47; 
+% Rm = 1.47 * 1e-3; % scaled for mA
+
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
-% Ke = 0.0918 * (60/2/pi)
-% Km = 0.25
-Km = 0.25 * 1e-3; % scaled for mA 
-Ke = 0.0918;
-% Ke = 0;
-end
+Ke = 0.0918 * (60/2/pi);
+Km = 0.25;
+% Km = 0.25 * 1e-3; % scaled for mA 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -330,26 +333,39 @@ figure, plot(t, y(:,3))
 
 %%
 close all
-t = 0:0.01:20;
+t = 0:0.01:10;
+DC = 12.5;
+amp = 12 * (DC/100);
 
-u_fun = @(tt) 1 - 2*(mod(tt,2) >= 1);
-% x0 = [0 0 0 0 0];
-% [t, y] = ode45(@(tt,y) simulate_dynamics_func(y, u_fun(tt)), [t(1) t(end)], x0);
+u_fun = @(tt) amp * ( 1 - 2*(mod(tt,2) >= 1) );
+x0 = [0 0 0 0 0];
+[t, y] = ode45(@(tt,y) simulate_dynamics_func(y, u_fun(tt)), [t(1) t(end)], x0);
 
-x0 = [0 0.1 0 0 0];
-[t, y] = ode45(@(tt,y) simulate_dynamics_func(y, 0), [t(1) t(end)], x0);
+figure
+subplot(4,1,1)
+plot(t, u_fun(t)), title("input")
+subplot(4,1,2)
+plot(t, y(:,1)), title("motor angle")
+subplot(4,1,3)
+plot(t, y(:,2)), title("pendulum angle")
+subplot(4,1,4)
+plot(t, y(:,3)), title("current")
+
+% x0 = [0 0.1 0 0 0];
+% [t, y] = ode45(@(tt,y) simulate_dynamics_func(y, 0), [t(1) t(end)], x0);
 
 
-init_response = readtable("PendulumImpulseResponse.csv");
-step_response = readtable("MotorRepeatedStepResponseDutyCycle50Percent.csv");
-t2 = step_response.Time_s_;
-y2 = step_response.Voltage_V_;
 
-t1 = init_response.Time_s_;
-y1 = init_response.Voltage_V_;
-
-figure, subplot(2,1,1), plot(t, y(:,1))
-subplot(2,1,2), plot(t2, movmean(y2, 1e3))
-figure; subplot(2,1,1),plot(t, y(:,2))
-subplot(2,1,2), plot( t1, y1)
-figure, plot(t, y(:,3))
+% init_response = readtable("PendulumImpulseResponse.csv");
+% step_response = readtable("MotorRepeatedStepResponseDutyCycle50Percent.csv");
+% t2 = step_response.Time_s_;
+% y2 = step_response.Voltage_V_;
+% 
+% t1 = init_response.Time_s_;
+% y1 = init_response.Voltage_V_;
+% 
+% figure, subplot(2,1,1), plot(t, y(:,1))
+% subplot(2,1,2), plot(t2, movmean(y2, 1e3))
+% figure; subplot(2,1,1),plot(t, y(:,2))
+% subplot(2,1,2), plot( t1, y1)
+% figure, plot(t, y(:,3))
