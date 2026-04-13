@@ -1,4 +1,4 @@
-0% Furuta Pendulum Dynamics -- ECEN 5458
+% Furuta Pendulum Dynamics -- ECEN 5458
 % Refer to the following two papers for a full derivation
 %   [1] https://onlinelibrary.wiley.com/doi/epdf/10.1155/2011/528341
 %   [2] https://journals.sagepub.com/doi/epdf/10.1243/PIME_PROC_1992_206_341_02
@@ -40,8 +40,13 @@ F_USEREAL = true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Values from Donavon :)
 
-m1 = 35.27e-3 ;
-m2 = 44.73e-3;
+% m1 = 35.27e-3 ;
+mtotal = 80e-3;
+m1percent = 0.43;
+m1 = mtotal * m1percent;
+m2 = mtotal * (1 - m1percent);
+% m1 = 1000e-3;
+% m2 = 44.73e-3;
 L1 = 192.16e-3 ;
 L2 = 243.66e-3 ;
 
@@ -59,9 +64,11 @@ J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 ;
 
 % dampening (b1 is a guess, but it should be quite high)
-b1 = 0.1;
+% b1 = 0.1;
 % b1 = 10;
-b2 = 0.0005;
+b1 = 0.0122;
+% b2 = 0.0005;
+b2 = 0.001;
 
 % next, the motor parameters
 Lm = 1.6e-3 ;
@@ -72,8 +79,9 @@ Rm = 1.47;
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
-Ke = 0.0918 * (60/2/pi);
-Km = 0.25;
+Ke = 0.6 * 0.0918 * (60/2/pi);
+Km = 1.5 * Ke;
+% Km = 1.2 * 0.25;
 % Km = 0.25 * 1e-3; % scaled for mA 
 
 
@@ -217,22 +225,6 @@ B42 = J_0_hat     / (J_0_hat*J_2_hat - m_2^2*L_1^2*l_2^2);
 
 % write inverted linearization
 % ignoring dynamics for "disturbance torque"
-
-% NOTE NEW STATE ORDERING: theta_1 theta_2 i theta_1_dot theta_2_dot
-% Old state ordering is commented out
-
-% A_i = [ 0   0   1        0    0       ;
-%         0   0   0        1    0       ;
-%         A31 A32 A33      A34  B31*K_m ; 
-%         A41 A42 A43      A44  B41*K_m ; 
-%         0   0   -K_e/L_m 0   -R_m/L_m ]; % ^^Changed from K_m to K_e... makes sense to switch these here, because K_e relates motion --> voltage/current
-% 
-% B_i = [ 0     ; 
-%         0     ;
-%         0     ;
-%         0     ;
-%         1/L_m ];
-
 A_i = [ 0    0    0        1         0   ;
         0    0    0        0         1   ;
         0    0   -R_m/L_m -K_e/L_m   0   ;
@@ -243,20 +235,12 @@ B_i = [ 0     ;
         1/L_m ; 
         0     ; 
         0     ];
-
-
-% write suspended linearization
-% A_s = [ 0    0    1        0     0       ;
-%         0    0    0        1     0       ;
-%         A31  A32  A33     -A34   B31*K_m ;
-%         A41 -A42 -A43      A44  -B41*K_m ; 
-%         0   0    -K_e/L_m  0    -R_m/L_m ]; % ^^
-
-% B_s = [ 0     ; 
-%         0     ;
-%         0     ;
-%         0     ;
-%         1/L_m ];
+C_i = [ 1 0 0 0 0 ; 
+        0 1 0 0 0 ;
+        0 0 1 0 0 ];
+D_i = [ 0 ;
+        0 ;
+        0 ];
 
 A_s = [ 0    0    0        1         0   ;
         0    0    0        0         1   ;
@@ -268,9 +252,12 @@ B_s = [ 0     ;
         1/L_m ; 
         0     ; 
         0     ];
-
-
-
+C_s = [ 1 0 0 0 0 ; 
+        0 1 0 0 0 ;
+        0 0 1 0 0 ];
+D_s = [ 0 ;
+        0 ;
+        0 ];
 
 % note: commented values below are states and inputs!
 subs_array = [ ...
@@ -314,58 +301,3 @@ save dynamics.mat
 
 fprintf("Running simulink companion file...\n")
 create_suspended_ctrl
-
-
-%% run simulation
-
-sim = ss(Abig_s, Bbig_s, Cbig_s, Dbig_s);
-simol = ss( A_s, B_s, C_s, D_s );
-t = 0:0.01:10;
-u = 1 - 2*(mod(t,2) >= 1);
-% y = lsim( sim, zeros(size(t)), t, [0 0.1 0 0 0 0 0 0 0 0].' );
-y = lsim( simol, u, t, [0 0 0 0 0].' );
-% y = lsim( simol, zeros(size(t)), t, [0 0.1 0 0 0].' );
-
-figure, plot(t, y(:,1))
-figure, plot(t, y(:,2))
-figure, plot(t, y(:,3))
-
-
-%%
-close all
-t = 0:0.01:10;
-DC = 12.5;
-amp = 12 * (DC/100);
-
-u_fun = @(tt) amp * ( 1 - 2*(mod(tt,2) >= 1) );
-x0 = [0 0 0 0 0];
-[t, y] = ode45(@(tt,y) simulate_dynamics_func(y, u_fun(tt)), [t(1) t(end)], x0);
-
-figure
-subplot(4,1,1)
-plot(t, u_fun(t)), title("input")
-subplot(4,1,2)
-plot(t, y(:,1)), title("motor angle")
-subplot(4,1,3)
-plot(t, y(:,2)), title("pendulum angle")
-subplot(4,1,4)
-plot(t, y(:,3)), title("current")
-
-% x0 = [0 0.1 0 0 0];
-% [t, y] = ode45(@(tt,y) simulate_dynamics_func(y, 0), [t(1) t(end)], x0);
-
-
-
-% init_response = readtable("PendulumImpulseResponse.csv");
-% step_response = readtable("MotorRepeatedStepResponseDutyCycle50Percent.csv");
-% t2 = step_response.Time_s_;
-% y2 = step_response.Voltage_V_;
-% 
-% t1 = init_response.Time_s_;
-% y1 = init_response.Voltage_V_;
-% 
-% figure, subplot(2,1,1), plot(t, y(:,1))
-% subplot(2,1,2), plot(t2, movmean(y2, 1e3))
-% figure; subplot(2,1,1),plot(t, y(:,2))
-% subplot(2,1,2), plot( t1, y1)
-% figure, plot(t, y(:,3))
