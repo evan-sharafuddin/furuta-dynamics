@@ -1,14 +1,10 @@
 
-clear
-clc
-close all
+clear 
+
 
 format shortG % so sci notation isn't used when its stupid
 load dynamics.mat
 
-lambda = eig( A_s );
-fprintf("Eigenvalues of A suspended OL:\n")
-disp(lambda)
 
 
 % Pole placement for suspended pendulum 

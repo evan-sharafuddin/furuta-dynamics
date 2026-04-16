@@ -40,35 +40,40 @@ F_USEREAL = true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Values from Donavon :)
 
-% m1 = 35.27e-3 ;
-mtotal = 80e-3;
-m1percent = 0.43;
-m1 = mtotal * m1percent;
-m2 = mtotal * (1 - m1percent);
+m1 = 35.27e-3 ;
+m2 = 44.73e-3;
+% m2 = 70e-3;
+% mtotal = 80e-3;
+% m1percent = 0.43;
+% m1 = mtotal * m1percent;
+% m2 = mtotal * (1 - m1percent);
 % m1 = 1000e-3;
 % m2 = 44.73e-3;
 L1 = 192.16e-3 ;
 L2 = 243.66e-3 ;
+% L2 = 210e-3;
 
 % assume mass is distributed evenly along arms, so COM is in middle
 l1 = L1 / 2;
-l2 = L2 / 2;
+% l2 = L2 / 2;
+l2 = L2 / 1.7;
 
 % calculate moment of inertia of rod about COM
 J1 = 1/12 * m1 * L1^2;
 J2 = 1/12 * m2 * L2^2;
 
 % these inertias are as defined in the paper [1]
+Jaddl = 0.1; % need to account for the moment of inertia of the encoder assembly
 J1hatv = J1 + m1*l1^2;
 J2hatv = J2 + m2*l2^2;
-J0hatv = J1hatv + m2*L1^2 ;
+J0hatv = J1hatv + m2*L1^2 + Jaddl ;
 
 % dampening (b1 is a guess, but it should be quite high)
-% b1 = 0.1;
+b1 = 0.1;
 % b1 = 10;
-b1 = 0.0122;
-% b2 = 0.0005;
-b2 = 0.001;
+% b1 = 0.0122;
+% b2 = 0.0001;
+b2 = 0.0001;
 
 % next, the motor parameters
 Lm = 1.6e-3 ;
@@ -79,7 +84,7 @@ Rm = 1.47;
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
 % they should be the same
-Ke = 0.6 * 0.0918 * (60/2/pi);
+Ke = 0.0918 * (60/2/pi);
 Km = 1.5 * Ke;
 % Km = 1.2 * 0.25;
 % Km = 0.25 * 1e-3; % scaled for mA 
@@ -299,5 +304,14 @@ D = zeros( 5, 1 );
 % save dynamics in mat file
 save dynamics.mat
 
+lambda = eig( A_s );
+fprintf("Eigenvalues of A suspended OL:\n")
+disp(lambda)
+
+lambda = eig( A_i );
+fprintf("Eigenvalues of A inverted OL:\n")
+disp(lambda)
+
 fprintf("Running simulink companion file...\n")
 create_suspended_ctrl
+create_inverted_ctrl
