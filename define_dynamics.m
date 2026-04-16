@@ -41,8 +41,8 @@ F_USEREAL = true;
 %%% Values from Donavon :)
 
 m1 = 35.27e-3 ;
-m2 = 44.73e-3;
-% m2 = 70e-3;
+% m2 = 44.73e-3;
+m2 = 70e-3;
 % mtotal = 80e-3;
 % m1percent = 0.43;
 % m1 = mtotal * m1percent;
