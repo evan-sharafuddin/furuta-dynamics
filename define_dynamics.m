@@ -41,8 +41,8 @@ F_USEREAL = true;
 %%% Values from Donavon :)
 
 m1 = 35.27e-3 ;
-% m2 = 44.73e-3;
-m2 = 70e-3;
+m2 = 44.73e-3;
+% m2 = 70e-3;
 % mtotal = 80e-3;
 % m1percent = 0.43;
 % m1 = mtotal * m1percent;
@@ -55,8 +55,8 @@ L2 = 243.66e-3 ;
 
 % assume mass is distributed evenly along arms, so COM is in middle
 l1 = L1 / 2;
-% l2 = L2 / 2;
-l2 = L2 / 1.7;
+l2 = L2 / 2;
+% l2 = L2 / 1.5;
 
 % calculate moment of inertia of rod about COM
 J1 = 1/12 * m1 * L1^2;
@@ -69,17 +69,21 @@ J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 + Jaddl ;
 
 % dampening (b1 is a guess, but it should be quite high)
-b1 = 0.1;
+b1 = 0.5;
 % b1 = 10;
 % b1 = 0.0122;
-% b2 = 0.0001;
-b2 = 0.0001;
+b2 = 4.59e-4;
+% b2 = 0.0005;
 
 % next, the motor parameters
 Lm = 1.6e-3 ;
 % Lm = 16e-3 * 1e-3; % scaled for mA
 Rm = 1.47; 
 % Rm = 1.47 * 1e-3; % scaled for mA
+
+% reduce RL dynamics
+% Lm = 1.6e-1;
+% Rm = 10;
 
 % Donavon was getting different values for back EMF and torque constants,
 % so these are incorporated separately in the model... however, IDEALLY
@@ -314,4 +318,4 @@ disp(lambda)
 
 fprintf("Running simulink companion file...\n")
 create_suspended_ctrl
-create_inverted_ctrl
+% create_inverted_ctrl

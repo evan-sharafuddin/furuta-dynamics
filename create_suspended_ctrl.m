@@ -1,4 +1,4 @@
-
+clc
 clear 
 
 
@@ -13,16 +13,21 @@ load dynamics.mat
 % pc = [ -9 -8 -7 -8-1j*0.1 -8+1j*0.1 ];
 % pc = [-20+1j*0.1, -20-1j*0.1, -21, -22+1j*0.1, -22-1j*0.1];
 % pc = -24:-20;
-% pc = -9:-5;
+pc = -9:-5;
 % pc = [ -100, -100+j, -10, -5, -100-j ];
+% pc = [-1 -910.91 -1+j*1 -1-j*1 -9];
 % pc = [ -2 -4 -5 -6 -7 ];
-pc = [-50 -25 -20 -4+j*0.5 -4-j*0.5];
+% pc = [-50 -25 -20 -4+j*0.5 -4-j*0.5];
 % pc = -1
 % pc = -35:-31;
+% pc = [ -9 -8 -7 -6+j*1 -6-j*1 ];
 
 
 % UNCOMMENT THE BELOW FOR CONVENTIONAL POLE PLACEMENT
 K_s = place( A_s, B_s, pc );
+
+% uncomment for open loop 
+% K_s = zeros(1,5);
 
 % LQR (keep in mind that this is CT and observer based, so not robust...)
 Q = [ 10 0 0 0 0 ;
@@ -48,7 +53,11 @@ D_s = zeros(3,1);
 % po = -804:-800;
 % po = -504:-500;
 % po = -104:-100;
-po = -404:-400;
+% po = -404:-400;
+% po = -204:-200;
+% po = -120:-116;
+po = -204:-200;
+% po = -304:-300;
 % po = [-204:-201, -500];
 % po = -1504:-1500;
 % po = [ -1800 -1810 -1812 -1813 -1814];
@@ -71,9 +80,25 @@ Dee = zeros(1,4);
 observer_sys = ss( Aee, Bee, Cee, Dee );
 
 % convert to discrete time 
-T = 1e-3; 
+T = 1/1000; 
 observer_sys_d = c2d( observer_sys, T, 'zoh' );
 [ Ae_de, Be_de, Ce_de, De_de ] = ssdata( observer_sys_d );
+
+% calculate compensator poles
+A_D = A_s - B_s*K_s - L_s*C_s;
+B_D = L_s;
+C_D = -K_s;
+D_D = zeros(1,3);
+Dz = ss(A_D, B_D, C_D, D_D);
+
+disp("Compensator poles")
+disp(pole(c2d(Dz, T, 'zoh')))
+
+% calculate plant poles
+
+% Gz = ss( A_s, B_s, C_s, D_s, T );
+% cl = feedback(Gz, -Dz);
+
 
 Ae_fi = fi( Ae_de, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
@@ -89,6 +114,13 @@ disp("Controller poles")
 disp(pc)
 disp("Observer poles")
 disp(po)
+if (max(abs(po))/2/pi > 1/2*1/T )
+    disp("Warning: observer is exceeding Nyquist frequency")
+end
+disp("Controller Poles (DT)")
+disp(exp(pc*T));
+disp("Obesrver Poles (DT)")
+disp(exp(po*T));
 disp("A")
 for i = 1:size(Ae_fi.hex,1)
     tokens = strsplit(strtrim(Ae_fi.hex(i,:)));          % split by whitespace

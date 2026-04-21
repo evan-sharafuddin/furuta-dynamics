@@ -1,29 +1,29 @@
 clc
 clear 
 
-
+%% BE CAREFUL! NAMING HASN'T BEEN COMPLETED UNCONFLICTED! ALSO MAKE SURE SAMPLE PERIOD IS SAME FOR ALL SCRIPTS!
 format shortG % so sci notation isn't used when its stupid
 load dynamics.mat
 
 % Convert system to discrete time
-C_s = [ 1 0 0 0 0 ;
+C_i = [ 1 0 0 0 0 ;
         0 1 0 0 0 ;
         0 0 1 0 0 ];
-D_s = [ 0 ;
+D_i = [ 0 ;
         0 ;
         0 ];
 T = 1/1000;
 
-sys_ct = ss( A_s, B_s, C_s, D_s );
+sys_ct = ss( A_i, B_i, C_i, D_i );
 sys_dt = c2d( sys_ct, T, 'zoh' );
-[A_s, B_s, C_s, D_s] = ssdata(sys_dt);
+[A_i, B_i, C_i, D_i] = ssdata(sys_dt);
 
 % Pole placement for suspended pendulum 
 pc = -9:-5;
 pc = exp(pc * T);
 
 % UNCOMMENT THE BELOW FOR CONVENTIONAL POLE PLACEMENT
-K_s = place( A_s, B_s, pc );
+K_i = place( A_i, B_i, pc );
 
 
 % Design of state observer
@@ -33,7 +33,7 @@ po = -204:-200;
 % po = -404:-400;
 po = exp(po * T);
 
-L_s = place( A_s', C_s', po )';
+L_i = place( A_i', C_i', po )';
 
 % convert to fixed point
 F_SIGNED = 1;
@@ -44,22 +44,22 @@ num_word = 32;
 res = 2^( -num_frac );
 
 % create fixed point matrices
-Aee = A_s - L_s * C_s;
-Bee = [ B_s L_s ];
-Cee = -K_s; % extract state
-Dee = zeros(1,4);
+Aee_i = A_i - L_i * C_i;
+Bee_i = [ B_i L_i ];
+Cee_i = -K_i; % extract state
+Dee_i = zeros(1,4);
 % observer_sys = ss( Aee, Bee, Cee, Dee );
 
 % do not need to convert to discrete time, so can just set the de matrices
-Ae_de = Aee;
-Be_de = Bee;
-Ce_de = Cee;
-De_de = Dee;
+Ae_de_i = Aee_i;
+Be_de_i = Bee_i;
+Ce_de_i = Cee_i;
+De_de_i = Dee_i;
 
 % calculate compensator poles
-A_D = A_s - B_s*K_s - L_s*C_s;
-B_D = L_s;
-C_D = -K_s;
+A_D = A_i - B_i*K_i - L_i*C_i;
+B_D = L_i;
+C_D = -K_i;
 D_D = zeros(1,3);
 Dz = ss(A_D, B_D, C_D, D_D);
 
@@ -72,13 +72,13 @@ disp(pole(Dz))
 % cl = feedback(Gz, -Dz);
 
 
-Ae_fi = fi( Ae_de, F_SIGNED, num_word, num_frac, ...
+Ae_fi_i = fi( Ae_de_i, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
-Be_fi = fi( Be_de, F_SIGNED, num_word, num_frac, ...
+Be_fi_i = fi( Be_de_i, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
-Ce_fi = fi( Ce_de, F_SIGNED, num_word, num_frac, ...
+Ce_fi_i = fi( Ce_de_i, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
-De_fi = fi( De_de, F_SIGNED, num_word, num_frac, ...
+De_fi_i = fi( De_de_i, F_SIGNED, num_word, num_frac, ...
     'RoundingMethod', rounding_method, 'OverflowAction', overflow_action );
 disp("Sample freq (Hz")
 disp( 1/T )
@@ -91,93 +91,93 @@ if (max(abs(po))/2/pi > 1/2*1/T )
 end
 
 disp("A")
-for i = 1:size(Ae_fi.hex,1)
-    tokens = strsplit(strtrim(Ae_fi.hex(i,:)));          % split by whitespace
+for i = 1:size(Ae_fi_i.hex,1)
+    tokens = strsplit(strtrim(Ae_fi_i.hex(i,:)));          % split by whitespace
     tokens = strcat('0x', tokens);               % prepend 0x
     line = strjoin(tokens, ', ');  
     line = [line ','];                    % add trailing comma% join with commas
     disp(line)
 end
 disp("B (col1: B_s; col2-4: L_s)")
-for i = 1:size(Be_fi.hex,1)
-    tokens = strsplit(strtrim(Be_fi.hex(i,:)));          % split by whitespace
+for i = 1:size(Be_fi_i.hex,1)
+    tokens = strsplit(strtrim(Be_fi_i.hex(i,:)));          % split by whitespace
     tokens = strcat('0x', tokens);               % prepend 0x
     line = strjoin(tokens, ', ');  
     line = [line ','];                    % add trailing comma% join with commas
     disp(line)
 end
 disp("C (-K_s)")
-for i = 1:size(Ce_fi.hex,1)
-    tokens = strsplit(strtrim(Ce_fi.hex(i,:)));          % split by whitespace
+for i = 1:size(Ce_fi_i.hex,1)
+    tokens = strsplit(strtrim(Ce_fi_i.hex(i,:)));          % split by whitespace
     tokens = strcat('0x', tokens);               % prepend 0x
     line = strjoin(tokens, ', ');  
     line = [line ','];                    % add trailing comma% join with commas
     disp(line)
 end
 disp("D")
-for i = 1:size(De_fi.hex,1)
-    tokens = strsplit(strtrim(De_fi.hex(i,:)));          % split by whitespace
+for i = 1:size(De_fi_i.hex,1)
+    tokens = strsplit(strtrim(De_fi_i.hex(i,:)));          % split by whitespace
     tokens = strcat('0x', tokens);               % prepend 0x
     line = strjoin(tokens, ', ');  
     line = [line ','];                    % add trailing comma% join with commas
     disp(line)
 end
 
-if max(max( abs(Ae_fi.double - Ae_de) )) > res
+if max(max( abs(Ae_fi_i.double - Ae_de_i) )) > res
     disp("Warning: FI encoded A matrix is saturating")
     disp("encoded")
-    disp(Ae_fi.double)
+    disp(Ae_fi_i.double)
     disp("original")
-    disp(Ae_de)
+    disp(Ae_de_i)
 end
-if max(max( abs(Be_fi.double - Be_de) )) > res
+if max(max( abs(Be_fi_i.double - Be_de_i) )) > res
     disp("Warning: FI encoded B matrix is saturating")
     disp("encoded")
-    disp(Be_fi.double)
+    disp(Be_fi_i.double)
     disp("original")
-    disp(Be_de)
+    disp(Be_de_i)
 end
-if max(max( abs(Ce_fi.double - Ce_de) )) > res
+if max(max( abs(Ce_fi_i.double - Ce_de_i) )) > res
     disp("Warning: FI encoded C matrix is saturating")
     disp("encoded")
-    disp(Ce_fi.double)
+    disp(Ce_fi_i.double)
     disp("original")
-    disp(Ce_de)
+    disp(Ce_de_i)
 end
-if max(max( abs(De_fi.double - De_de) )) > res
+if max(max( abs(De_fi_i.double - De_de_i) )) > res
     disp("Warning: FI encoded D matrix is saturating")
     disp("encoded")
-    disp(De_fi.double)
+    disp(De_fi_i.double)
     disp("original")
-    disp(De_de)
+    disp(De_de_i)
 end
 
     
 
 
-%%% The following are NOT implemented on the pendulum and used only for sim %%%
-% create overall controller/observer matrix 
-Abig_s = [ A_s-B_s*K_s          , B_s*K_s     ;
-           zeros( size( A_s ) ) , A_s-L_s*C_s ];
-Bbig_s = zeros( 10, 1 );
-Cbig_s = [ eye(5) zeros(5); zeros(5) zeros(5) ];
-Dbig_s = zeros( 10, 1 );
-
-% lambda = eig( Abig_s );
-% fprintf("Eigenvalues of A suspended CL:\n")
-% disp(lambda)
-
-% create discrete time matrices for SLK state space block
-% T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
-
-Ae = A_s - L_s * C_s;
-Be = [ B_s L_s ];
-Ce = eye(5); % extract state
-De = zeros(5,4);
-observer_sys = ss( Ae, Be, Ce, De );
-
-observer_sys_d = c2d( observer_sys, T, 'zoh' );
-
-[ Ae_d, Be_d, Ce_d, De_d ] = ssdata( observer_sys_d );
-
+% %%% The following are NOT implemented on the pendulum and used only for sim %%%
+% % create overall controller/observer matrix 
+% Abig_s = [ A_i-B_i*K_i          , B_i*K_i     ;
+%            zeros( size( A_i ) ) , A_i-L_i*C_i ];
+% Bbig_s = zeros( 10, 1 );
+% Cbig_s = [ eye(5) zeros(5); zeros(5) zeros(5) ];
+% Dbig_s = zeros( 10, 1 );
+% 
+% % lambda = eig( Abig_s );
+% % fprintf("Eigenvalues of A suspended CL:\n")
+% % disp(lambda)
+% 
+% % create discrete time matrices for SLK state space block
+% % T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
+% 
+% Ae = A_i - L_i * C_i;
+% Be = [ B_i L_i ];
+% Ce = eye(5); % extract state
+% De = zeros(5,4);
+% observer_sys = ss( Ae, Be, Ce, De );
+% 
+% observer_sys_d = c2d( observer_sys, T, 'zoh' );
+% 
+% [ Ae_d, Be_d, Ce_d, De_d ] = ssdata( observer_sys_d );
+% 
 

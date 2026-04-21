@@ -1,85 +1,60 @@
-clear 
+% clear 
 clc 
 close all
 
-load ctdata.mat
-load dtsim.mat
+ctsim = out.CTsim;
+dtsim = out.DTsim;
+% note
+% (:,1) - (:,5) --> plant states
+% (:,6) - (:,10) --> estimator states
+% (:,11) --> voltage input
+
+function plotsys( ts, plotgt, plotest )
+
+subplot(3,2,1)
+t = ts.time;
+d = ts.data;
+if plotgt; plot( t, d(:,1) ); end
+hold on
+if plotest; plot( t, d(:,6) ); end
+xlabel("Time [s]")
+ylabel("x_1 / rotor angle [rad]")
+legend("Ground Truth", "Estimate" )
+
+subplot(3,2,2)
+if plotgt; plot( t, d(:,2) ); end
+hold on
+if plotest; plot( t, d(:,7) ); end
+xlabel("Time [s]")
+ylabel("x_2 / pendulum angle [rad]")
+
+subplot(3,2,3)
+if plotgt; plot( t, d(:,3) ); end
+hold on
+if plotest; plot( t, d(:,8) ); end
+xlabel("Time [s]")
+ylabel("Motor current [A]")
+
+subplot(3,2,4)
+if plotgt; plot( t, d(:,4) ); end
+hold on
+if plotest; plot( t, d(:,9) ); end
+xlabel("Time [s]")
+ylabel("Rotor speed [rad/s]")
+
+subplot(3,2,5)
+if plotgt; plot( t, d(:,5) ); end
+hold on
+if plotest; plot( t, d(:,10) ); end
+xlabel("Time [s]")
+ylabel("Pendulum speed [rad/s]")
+
+subplot(3,2,6)
+plot( t, d(:,11) )
+xlabel("Time [s]")
+ylabel("Motor voltage input [V]")
+
+end
 
 figure
-
-% Subplot 1 — Rotor angle
-subplot(3,2,1)
-hold on
-plot(ct0p0.time,   ct0p0.data(:,1))
-plot(ct0p05.time,  ct0p05.data(:,1))
-plot(ct0p099.time, ct0p099.data(:,1))
-title('Rotor angle [rad]')
-
-% Subplot 2 — Pendulum angle
-subplot(3,2,2)
-hold on
-plot(ct0p0.time,   ct0p0.data(:,2))
-plot(ct0p05.time,  ct0p05.data(:,2))
-plot(ct0p099.time, ct0p099.data(:,2))
-title('Pendulum angle [rad]')
-
-% Subplot 3 — Current
-subplot(3,2,3)
-hold on
-plot(ct0p0.time,   ct0p0.data(:,3))
-plot(ct0p05.time,  ct0p05.data(:,3))
-plot(ct0p099.time, ct0p099.data(:,3))
-title('Current [A]')
-
-% Subplot 4 — Rotor speed
-subplot(3,2,4)
-hold on
-plot(ct0p0.time,   ct0p0.data(:,4))
-plot(ct0p05.time,  ct0p05.data(:,4))
-plot(ct0p099.time, ct0p099.data(:,4))
-title('Rotor speed [rad/s]')
-
-% Subplot 5 — Pendulum speed
-subplot(3,2,5)
-hold on
-plot(ct0p0.time,   ct0p0.data(:,5))
-plot(ct0p05.time,  ct0p05.data(:,5))
-plot(ct0p099.time, ct0p099.data(:,5))
-title('Pendulum speed [rad/s]')
-
-figure
-
-% Subplot 1 — Rotor angle
-subplot(3,2,1)
-hold on
-plot(dtsim.time, dtsim.data(:,1))
-plot(dtsim.time, dtsim.data(:,6))
-title('Rotor angle [rad]')
-
-% Subplot 2 — Pendulum angle
-subplot(3,2,2)
-hold on
-plot(dtsim.time, dtsim.data(:,2))
-plot(dtsim.time, dtsim.data(:,7))
-title('Pendulum angle [rad]')
-
-% Subplot 3 — Current
-subplot(3,2,3)
-hold on
-plot(dtsim.time, dtsim.data(:,3))
-plot(dtsim.time, dtsim.data(:,8))
-title('Current [A]')
-
-% Subplot 4 — Rotor speed
-subplot(3,2,4)
-hold on
-plot(dtsim.time, dtsim.data(:,4))
-plot(dtsim.time, dtsim.data(:,9))
-title('Rotor speed [rad/s]')
-
-% Subplot 5 — Pendulum speed
-subplot(3,2,5)
-hold on
-plot(dtsim.time, dtsim.data(:,5))
-plot(dtsim.time, dtsim.data(:,10))
-title('Pendulum speed [rad/s]')
+plotsys( ctsim, 1, 1) 
