@@ -16,6 +16,12 @@ T = 1/1000;
 
 sys_ct = ss( A_i, B_i, C_i, D_i );
 sys_dt = c2d( sys_ct, T, 'zoh' );
+
+Aold = A_i;
+Bold = B_i;
+Cold = C_i;
+Dold = D_i;
+
 [A_i, B_i, C_i, D_i] = ssdata(sys_dt);
 
 % Pole placement for suspended pendulum 
@@ -25,6 +31,7 @@ pc = exp(pc * T);
 % UNCOMMENT THE BELOW FOR CONVENTIONAL POLE PLACEMENT
 K_i = place( A_i, B_i, pc );
 
+K_i = zeros(size(K_i));
 
 % Design of state observer
 % po = -304:-300;
@@ -157,27 +164,27 @@ end
 
 % %%% The following are NOT implemented on the pendulum and used only for sim %%%
 % % create overall controller/observer matrix 
-% Abig_s = [ A_i-B_i*K_i          , B_i*K_i     ;
-%            zeros( size( A_i ) ) , A_i-L_i*C_i ];
-% Bbig_s = zeros( 10, 1 );
-% Cbig_s = [ eye(5) zeros(5); zeros(5) zeros(5) ];
-% Dbig_s = zeros( 10, 1 );
-% 
-% % lambda = eig( Abig_s );
-% % fprintf("Eigenvalues of A suspended CL:\n")
-% % disp(lambda)
-% 
-% % create discrete time matrices for SLK state space block
-% % T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
-% 
-% Ae = A_i - L_i * C_i;
-% Be = [ B_i L_i ];
-% Ce = eye(5); % extract state
-% De = zeros(5,4);
-% observer_sys = ss( Ae, Be, Ce, De );
-% 
+Abig_i = [ A_i-B_i*K_i          , B_i*K_i     ;
+           zeros( size( A_i ) ) , A_i-L_i*C_i ];
+Bbig_i = zeros( 10, 1 );
+Cbig_i = [ eye(5) zeros(5); zeros(5) zeros(5) ];
+Dbig_i = zeros( 10, 1 );
+
+lambda = eig( Abig_i );
+fprintf("Eigenvalues of A suspended CL:\n")
+disp(lambda)
+
+% create discrete time matrices for SLK state space block
+% T = 1e-3; % [Hz], fastest sampling frequecy, can do 5, 3.33, 2.5, ...
+
+Ae_i = A_i - L_i * C_i;
+Be_i = [ B_i L_i ];
+Ce_i = eye(5); % extract state
+De_i = zeros(5,4);
+observer_sys = ss( Ae_i, Be_i, Ce_i, De_i );
+
 % observer_sys_d = c2d( observer_sys, T, 'zoh' );
-% 
+
 % [ Ae_d, Be_d, Ce_d, De_d ] = ssdata( observer_sys_d );
-% 
+
 

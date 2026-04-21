@@ -13,6 +13,9 @@ S_DT3 = load("S_DT_1en2.mat");
 S_DT4 = load("S_DT_5en1.mat");
 S_DT5 = load("S_DT_2en1.mat");
 
+I_OL = load("I_DT_OL.mat");
+I_ST = load("I_DT_1en3.mat");
+
 %% =========================
 % FIGURE 1: CT + DT + OL
 %% =========================
@@ -25,6 +28,10 @@ set(gcf, 'Units', 'inches', 'Position', [1, 1, 7, 8])
 %% =========================
 figure
 compare_DT_only(S_OL, S_DT3, S_DT4, S_DT5)
+set(gcf, 'Units', 'inches', 'Position', [1, 1, 7, 8])
+
+figure
+compare_jus_2(I_OL, I_ST)
 set(gcf, 'Units', 'inches', 'Position', [1, 1, 7, 8])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -206,6 +213,86 @@ for k = 1:6
         
         legend([h_ol, h1, h2, h3], ...
             ["OL", "DT 1e-3", "DT 5e-1", "DT 2e-1"], ...
+            'FontWeight','bold', ...
+            'FontSize', 12)
+    end
+end
+
+end
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% FUNCTION 3: DT ONLY + OL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function compare_jus_2(S_OL, S_DT1)
+
+dt_cases = {S_DT1};
+
+dt_colors = [0 0.2 0.8];
+
+t_ol = S_OL.out.DTsimI.time;
+d_ol = S_OL.out.DTsimI.data;
+
+for k = 1:6
+    
+    subplot(3,2,k)
+    hold on
+        
+    if k == 1
+        i = k;
+        ylab = 'x_1 [rad]';
+    elseif k == 2
+        i = k;
+        ylab = 'x_2 [rad]';
+    elseif k == 3
+        i = k;
+        ylab = 'x_3 [A]';
+    elseif k == 4
+        i = k;
+        ylab = 'x_4 [rad/s]';
+    elseif k == 5
+        i = k;
+        ylab = 'x_5 [rad/s]';
+    else
+        i = 11;
+        ylab = 'u [V]';
+    end
+    
+    d_ol = squeeze(d_ol);
+    plot(t_ol, d_ol(i,:), 'k', 'LineWidth', 2.5)
+    
+    for c = 1:1
+        
+        t_dt = dt_cases{c}.out.DTsimI.time;
+        d_dt = dt_cases{c}.out.DTsimI.data;
+        
+        stairs(t_dt, d_dt(i,:), ...
+            'Color', dt_colors(c,:), ...
+            'LineWidth', 2.0)
+    end
+    
+    grid on
+    
+    ylabel(ylab, 'FontWeight', 'bold', 'FontSize', 14)
+    xlabel('Time [s]', 'FontWeight', 'bold', 'FontSize', 14)
+    % title(sprintf('Signal %d', k), 'FontWeight', 'bold', 'FontSize', 15)
+    
+    ax = gca;
+    ax.FontWeight = 'bold';
+    ax.FontSize = 13;
+    ax.LineWidth = 1.3;
+    
+    if k == 1
+        
+        h_ol = plot(nan, nan, 'k', 'LineWidth', 2.5);
+        h1 = plot(nan, nan, 'Color', dt_colors(1,:), 'LineWidth', 2.0);
+        % h2 = plot(nan, nan, 'Color', dt_colors(2,:), 'LineWidth', 2.0);
+        % h3 = plot(nan, nan, 'Color', dt_colors(3,:), 'LineWidth', 2.0);
+        
+        legend([h_ol, h1], ...
+            ["OL", "DT 1e-3"], ...
             'FontWeight','bold', ...
             'FontSize', 12)
     end
