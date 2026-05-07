@@ -41,8 +41,6 @@ much, if at all
 % load dynamics
 define_dynamics;
 
-% clear
-
 % read input
 fid = fopen('scope_14.bin', 'rb', 'ieee-le');
 raw = fread(fid, 'float32');
@@ -62,35 +60,9 @@ diffs = find( abs(diff(ch1)) > 0.25);
 diff(diffs); % seems like it is overwhelmingly 19794
 figure, plot( abs(diff(ch1)) > 0.25), hold on, plot(ch1)
 
-% samples seem to start at 37028 (diffs(2))
+% samples seem to start at 37028
 % input seems to end at 492271 (diffs(end))
 
-
-% function [] = plotx(~)
-% 
-% xline(96000)
-% xline(116000)
-% xline(136000)
-% xline(156000)
-% xline(176000)
-% xline(196000)
-% xline(216000)
-% xline(235500)
-% xline(255500)
-% xline(275500)
-% xline(295000)
-% xline(315000)
-% xline(334500)
-% xline(354500)
-% xline(374000)
-% xline(394000)
-% xline(413500)
-% xline(433500)
-% xline(453500)
-% xline(473000)
-% xline(492000)
-% 
-% end
 
 function [] = xlines(~)
 
@@ -125,11 +97,6 @@ u = repelem(vals, Ns);   % repeat each value Ns times
 % for some reason u is running one sample short
 u = [ u 0 ];
 
-
-% t = (0:length(u)-1)' * T;
-
-% run simulation
-
 sim = ss(Abig_s, Bbig_s, Cbig_s, Dbig_s);
 simol = ss( A_s, B_s, C_s, D_s );
 y = lsim( simol, u, t, [0 0 0 0 0].' );
@@ -141,20 +108,28 @@ figure
 % new plots
 subplot(4,1,1)
 yyaxis left, plot(t, u)
-yyaxis right, plot(t, ch1)
+yyaxis right, plot(t, movmean(ch1, movwin))
+title("Voltage Input")
 xlines
+
 subplot(4,1,2)
 yyaxis left, plot(t, y(:,1))
-yyaxis right, plot(t, ch2)
+yyaxis right, plot(t, movmean(ch2, movwin))
+title("Rotor Arm Angle")
 xlines
+
 subplot(4,1,3)
 yyaxis left, plot(t, y(:,2))
-yyaxis right, plot(t, -ch3)
+yyaxis right, plot(t, -movmean(ch3, movwin))
+title("Pendulum Arm Angle")
 xlines
+
 subplot(4,1,4)
 yyaxis left, plot(t, y(:,3))
-yyaxis right, plot(t, ch4)
+yyaxis right, plot(t, movmean(ch4, movwin))
+title("Motor Current")
 xlines
+
 
 % Evan notes on model fitting
 %{
@@ -163,68 +138,3 @@ gain parameter in front of each of the outputs. Hopefully the fitting
 algorithm is more concerned about fitting transient behavior
 * TODO ask chat to set up greyid lol
 %}
-
-
-
-
-
-
-
-
-% 
-% 
-% % input
-% lowlim = 2.2;
-% hilim = 28.3;
-% 
-% subplot(4,2,1)
-% plot( movmean(ch1, movwin) ), ylim( [0 3.3] ), yline(3.3/2), xlim( [82000 6e5] )
-% plotx()
-% subplot(4,2,3)
-% plot( t, u ), xlim( [lowlim hilim ])
-% for ii = 3:23
-%     xline(ii)
-% end
-% 
-% % rotor angle 
-% subplot(4,2,2)
-% plot( movmean(ch2, movwin) ), ylim( [0 3.3] ), yline(3.3/2), xlim( [82000 6e5] )
-% subplot(4,2,4)
-% plot( t, y(:,1) ), xlim( [lowlim hilim ]), yline(0)
-% 
-% % pendulum angle
-% subplot(4,2,5)
-% plot( movmean(ch3, movwin ) ), ylim( [0 3.3] ), yline(3.3/2), xlim( [82000 6e5] )
-% plotx()
-% xline(5e5)
-% xline(5.5e5)
-% subplot(4,2,7)
-% plot( t, y(:,2)*-1 ), xlim( [lowlim hilim ]), xline(23), xline(22), ylim([-1.2 1.2])
-% for ii = 3:23
-%     xline(ii)
-% end
-% xline(23.3)
-% xline(25.8)
-% yline(0)
-% 
-% % current
-% subplot(4,2,6)
-% plot( movmean(ch4, movwin ) ), ylim( [0 3.3] ), yline(3.3/2), xlim( [82000 6e5] )
-% subplot(4,2,8)
-% plot( t, y(:,3)), xlim( [lowlim hilim ]), yline(0)
-% 
-% % %%%
-% % figure, hold on
-% % ax1 = axes;
-% % plot(ax1, movmean(ch3, movwin )), xlim(ax1, [82000 6e5] )
-% % % ylim( [0 3.3] ), yline(3.3/2), xlim( [82000 6e5] ), xline(473000), xline(492000)
-% % 
-% % ax2 = axes('Position', ax1.Position, ...
-% %            'Color', 'none', ...
-% %            'XAxisLocation', 'top', ...
-% %            'YAxisLocation', 'right');
-% % 
-% % plot(ax2, t, y(:,2)*-1 ), xlim(ax2, [lowlim hilim ])
-% % % xline(23), xline(22)
-% % 
-% % % linkaxes([ax1 ax2], 'y')   % or 'x' depending on your setup

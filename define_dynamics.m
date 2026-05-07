@@ -69,11 +69,13 @@ J2hatv = J2 + m2*l2^2;
 J0hatv = J1hatv + m2*L1^2 + Jaddl ;
 
 % dampening (b1 is a guess, but it should be quite high)
-b1 = 0.5;
+% b1 = 0.5;
 % b1 = 10;
 % b1 = 0.0122;
-b2 = 4.59e-4;
+% b2 = 4.59e-4;
 % b2 = 0.0005;
+b1 = .807;
+b2 = .00117;
 
 % next, the motor parameters
 Lm = 1.6e-3 ;

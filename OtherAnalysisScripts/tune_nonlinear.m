@@ -1,7 +1,7 @@
 % clear; clc; close all;
 
 % Load data
-init_response = readtable("PendulumImpulseResponse.csv");
+init_response = readtable("../PendulumImpulseResponse.csv");
 
 t = init_response.Time_s_;
 y = init_response.Voltage_V_;

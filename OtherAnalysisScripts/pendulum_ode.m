@@ -3,7 +3,8 @@ function [dx] = pendulum_ode(t, x)
     g = 9.81;
     % L = 243.66e-3;
     L = 200e-3;
-    eta = 0.2;
+    % eta = 0.2;
+    eta = .00117;
 
     % States
     theta = x(1);
